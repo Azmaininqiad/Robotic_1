@@ -1,92 +1,55 @@
-Robotic_1: Automated Physics Solution Evaluation & Text Extraction
-This project demonstrates an AI-powered workflow for:
+# Robotic_1.ipynb Documentation
 
-Extracting and understanding handwritten or scanned text/images (e.g., exam scripts, physics problems)
-Comparing extracted solutions with sample answers/rubrics
-Auto-evaluating exam-style answers using Retrieval-Augmented Generation (RAG) and LLMs
-Supporting PDF and image uploads for flexible document processing
-Features
-Text Extraction from Images: Utilizes Google Gemini API to extract and describe handwritten or printed content from images.
-Automated Answer Evaluation: Uses LangChain and Gemini to compare student solutions against marking rubrics and provide detailed marking breakdowns.
-PDF Processing: Extracts and splits PDF-based questions and solutions for granular analysis.
-Flexible Marking: Customizes feedback and scoring based on provided marks distribution and answer structure.
-Usage Outline
-Install Requirements The notebook auto-installs all dependencies, including:
+## Overview
 
-google-generativeai
-google-cloud-aiplatform
-langchain, langchain-community, langchain-google-genai
-chromadb, pypdf, sentence_transformers, llama-index
-Image-to-Text Extraction
+`Robotic_1.ipynb` is a Jupyter notebook that demonstrates an AI-powered workflow for automated extraction and evaluation of handwritten or scanned exam answers, primarily for physics problems. It leverages Google Gemini (Generative AI), LangChain, and Retrieval-Augmented Generation (RAG) to:
 
-Upload a handwritten/scanned image (e.g., udvash.jpg, 1.png)
-Extract the text and a descriptive summary using Gemini
-PDF Question/Answer Extraction
+- Extract and describe text from images (e.g., scanned answer scripts)
+- Parse and process PDF documents containing exam questions and answers
+- Compare extracted answers with marking rubrics
+- Auto-evaluate answers and generate detailed feedback
 
-Load and split exam PDFs (e.g., 1.pdf, 2.pdf) using PyPDFLoader
-Display parsed question/answer content, including marking schemes
-Retrieval-Augmented Evaluation
+## Main Components
 
-Index and embed the PDF content for semantic search
-Use LangChain’s RetrievalQA to answer/explain based on extracted student response and rubric
-Marking/Feedback Generation
+### 1. Text Extraction from Images
+- Uses Google Gemini API to extract and describe content from uploaded images (e.g., `udvash.jpg`, `1.png`).
+- The extracted text and a summary are generated for further evaluation.
 
-Provide a question, student answer, and marking scheme
-Gemini LLM generates total marks and step-wise feedback
-Example Workflow
-Python
-# 1. Install required packages (auto-installed in notebook)
-!pip install google-generativeai --quiet
-!pip install --upgrade google-cloud-aiplatform --quiet
-!pip install -U langchain-community chromadb pypdf sentence_transformers
+### 2. PDF Processing
+- Loads and splits PDF files (e.g., `1.pdf`, `2.pdf`) using `PyPDFLoader`.
+- Extracts page-wise content for granular analysis and marking.
 
-# 2. Extract text and description from image
-import google.generativeai as genai
-from google.colab import userdata
-GOOGLE_API_KEY = userdata.get('GOOGLE_API_KEY')
-genai.configure(api_key=GOOGLE_API_KEY)
-sample_file = genai.upload_file(path="/content/udvash.jpg", display_name="Jetpack drawing")
-model = genai.GenerativeModel(model_name="gemini-1.5-pro-latest")
-response = model.generate_content([sample_file, "Extract the text and describe the image from this picture"])
-print(response.text)
+### 3. Retrieval-Augmented Evaluation
+- Embeds and indexes PDF content using LangChain and Chroma for semantic search.
+- Uses `RetrievalQA` to answer questions and compare student responses with the marking scheme.
 
-# 3. Load and split exam PDFs
-from langchain.document_loaders import PyPDFLoader
-pdf_loader = PyPDFLoader("/content/1.pdf")
-pages = pdf_loader.load_and_split()
-print(pages[0].page_content)
+### 4. Automated Marking & Feedback
+- Custom system instructions allow the LLM to act as an examiner, providing marks and feedback based on a provided rubric.
+- Generates a breakdown of marks and explanations for each step.
 
-# 4. Run retrieval-augmented marking
-from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
-from langchain.vectorstores import Chroma
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.chains import RetrievalQA
+## Usage
 
-embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001", google_api_key=GOOGLE_API_KEY)
-texts = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100).split_text('\n\n'.join(p.page_content for p in pages))
-vector_index = Chroma.from_texts(texts, embeddings).as_retriever(search_kwargs={"k":5})
-model = ChatGoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=GOOGLE_API_KEY, system_instruction="You are an examiner...")
-qa_chain = RetrievalQA.from_chain_type(model, retriever=vector_index, return_source_documents=True)
-result = qa_chain({"query": response.text})
-print(result["result"])
-Example Marking Output
-Code
-'The provided handwritten calculation uses an incorrect formula and values. The correct formula, as shown in the sample answer, is v = j/(ne), where j is current density, n is the number of electrons per unit volume, and e is the charge of an electron. ...'
-Requirements
-Python 3.10+ (Google Colab recommended)
-Google Gemini API Key (set as userdata.get('GOOGLE_API_KEY') in Colab)
-PDF and/or image files of student answers
-File Structure
-Robotic.ipynb – Main notebook with all code and workflow
-/content/1.pdf, /content/2.pdf – Sample PDF exam scripts
-/content/udvash.jpg, /content/1.png – Sample handwritten answer images
-Customization
-Adjust the system_instruction prompt to change marking criteria or feedback style.
-Upload your own PDFs/images for different subjects or marking schemes.
-License
-This project is for academic/research/demo use. Please ensure you handle student data and API keys securely.
+1. **Install Dependencies**: The notebook auto-installs all required packages (Google Gemini, LangChain, ChromaDB, etc.).
+2. **Upload Files**: Add your image and PDF files to the Colab environment.
+3. **Run Cells**: Execute the notebook cells in order to extract, process, and evaluate answers.
+4. **Customize**: Adjust the system instructions or upload your own marking schemes as needed.
 
-Acknowledgements
-Google Gemini (Generative AI)
-LangChain
-Google Colab
+## Example Workflow
+- Upload an image or PDF of a student's answer.
+- Extract the text and description using Gemini.
+- Load and split the PDF for question/answer extraction.
+- Use RAG to compare the answer with the rubric and auto-generate marks and feedback.
+
+## Requirements
+- Google Colab (recommended)
+- Google Gemini API Key (set as `userdata.get('GOOGLE_API_KEY')`)
+- PDF/image files of student answers
+
+## References
+- [Google Gemini](https://ai.google.dev/)
+- [LangChain](https://python.langchain.com/)
+- [Google Colab](https://colab.research.google.com/)
+
+---
+
+For more details, see the `README.md` in this directory.
